@@ -51,8 +51,17 @@ pipeline {
                         # Install npm dependencies
                         npm ci --no-audit --no-fund
                         
-                        # Build assets
+                        # Set environment for production build
+                        export NODE_ENV=production
+                        
+                        # Build assets (production build)
                         npm run build
+                        
+                        # Verify build artifacts exist
+                        echo 'Checking build output:'
+                        ls -la public/ || echo 'Public directory not found'
+                        ls -la public/build/ || echo 'Build directory not found'
+                        ls -la public/build/manifest.json || echo 'Manifest file not found'
                         
                         # Create Unit test directory if it doesn't exist
                         mkdir -p tests/Unit
