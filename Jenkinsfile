@@ -67,7 +67,7 @@ pipeline {
 EOF
                         
                         # Create a dummy app.js file
-                        echo 'console.log("Test app");' > public/build/assets/app.js
+                        echo 'console.log(\"Test app\");' > public/build/assets/app.js
                         echo 'Created test assets'
                         
                         # Show final manifest content
