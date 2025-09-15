@@ -32,7 +32,7 @@ pipeline {
             agent any
             steps {
                 withCredentials([file(credentialsId: 'laravel-env-file', variable: 'ENV_FILE')]) {
-                    sh 'cp "$ENV_FILE" .env'
+                    sh 'cp "$ENV_FILE" .env || echo "Warning: Could not copy .env file"'
                 }
                 
                 sh '''
@@ -73,9 +73,16 @@ pipeline {
             agent any
             steps {
                 withCredentials([usernamePassword(credentialsId: env.REGISTRY_CREDENTIALS, usernameVariable: 'REG_USER', passwordVariable: 'REG_PASS')]) {
-                    sh "echo $REG_PASS | docker login ${REGISTRY_URL} -u $REG_USER --password-stdin"
-                    sh "docker build -t ${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG} ."
-                    sh "docker push ${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}"
+                    sh '''
+                        if command -v docker &> /dev/null; then
+                            echo "$REG_PASS" | docker login ${REGISTRY_URL} -u $REG_USER --password-stdin
+                            docker build -t ${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG} .
+                            docker push ${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}
+                        else
+                            echo "Docker not found. Skipping Docker build/push."
+                            exit 1
+                        fi
+                    '''
                 }
             }
         }
@@ -84,7 +91,7 @@ pipeline {
     post {
         always {
             node('') {
-                sh "docker logout ${REGISTRY_URL} || true"
+                sh "command -v docker &> /dev/null && docker logout ${REGISTRY_URL} || echo 'Docker not available'"
                 archiveArtifacts artifacts: 'public/build/**', allowEmptyArchive: true
                 junit allowEmptyResults: true, testResults: 'storage/test-reports/**/*.xml'
             }
