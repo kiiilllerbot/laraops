@@ -131,7 +131,7 @@ EOF
     post {
         always {
             node('') {
-                sh "[ -f '/Applications/Docker.app/Contents/Resources/bin/docker' ] && /Applications/Docker.app/Contents/Resources/bin/docker logout ${REGISTRY_URL} || echo 'Docker not available'"
+                sh "[ -f '/Applications/Docker.app/Contents/Resources/bin/docker' ] && /Applications/Docker.app/Contents/Resources/bin/docker logout ${REGISTRY_URL} 2>/dev/null || echo 'Docker logout completed (credentials may not be stored)'"
                 archiveArtifacts artifacts: 'public/build/**', allowEmptyArchive: true
                 junit allowEmptyResults: true, testResults: 'storage/test-reports/**/*.xml'
             }
