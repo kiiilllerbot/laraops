@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent none
 
     parameters {
         string(name: 'BRANCH', defaultValue: 'main', description: 'Branch to build')
@@ -27,38 +27,35 @@ pipeline {
             }
         }
 
-        stage('Inject .env') {
+        stage('Build and Test') {
+            agent {
+                docker {
+                    image 'composer:2'
+                    args '-v /var/run/docker.sock:/var/run/docker.sock'
+                }
+            }
             steps {
                 withCredentials([file(credentialsId: 'laravel-env-file', variable: 'ENV_FILE')]) {
                     sh 'cp "$ENV_FILE" .env'
                 }
-            }
-        }
-
-        stage('Validate') {
-            steps {
-                sh 'php -v | head -n 1 || true'
-                sh 'node -v || true'
-                sh 'composer -V || true'
-            }
-        }
-
-        stage('Install dependencies') {
-            steps {
-                sh 'composer install --no-interaction --prefer-dist'
-                sh 'npm ci --no-audit --no-fund'
-            }
-        }
-
-        stage('Build assets') {
-            steps {
-                sh 'npm run build'
-            }
-        }
-
-        stage('Run tests') {
-            steps {
-                sh 'composer test'
+                
+                sh '''
+                    # Install Node.js
+                    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+                    apt-get install -y nodejs
+                    
+                    # Install Composer dependencies
+                    composer install --no-interaction --prefer-dist
+                    
+                    # Install npm dependencies
+                    npm ci --no-audit --no-fund
+                    
+                    # Build assets
+                    npm run build
+                    
+                    # Run tests
+                    composer test
+                '''
             }
             post {
                 failure {
@@ -74,28 +71,13 @@ pipeline {
             when {
                 branch 'main'
             }
-            steps {
-                sh "docker build -t ${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG} ."
-            }
-        }
-
-        stage('Docker login') {
-            when {
-                branch 'main'
-            }
+            agent any
             steps {
                 withCredentials([usernamePassword(credentialsId: env.REGISTRY_CREDENTIALS, usernameVariable: 'REG_USER', passwordVariable: 'REG_PASS')]) {
                     sh "echo $REG_PASS | docker login ${REGISTRY_URL} -u $REG_USER --password-stdin"
+                    sh "docker build -t ${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG} ."
+                    sh "docker push ${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}"
                 }
-            }
-        }
-
-        stage('Docker push') {
-            when {
-                branch 'main'
-            }
-            steps {
-                sh "docker push ${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}"
             }
         }
     }
