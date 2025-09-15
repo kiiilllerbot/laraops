@@ -56,15 +56,13 @@ pipeline {
                         mkdir -p public/build/assets
                         
                         # Create manifest.json for tests
-                        cat > public/build/manifest.json << 'EOF'
-{
+                        echo '{
   "resources/js/app.jsx": {
     "file": "assets/app.js",
     "src": "resources/js/app.jsx",
     "isEntry": true
   }
-}
-EOF
+}' > public/build/manifest.json
                         
                         # Create a dummy app.js file
                         printf 'console.log("Test app");\n' > public/build/assets/app.js
