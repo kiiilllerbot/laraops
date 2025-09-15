@@ -28,33 +28,31 @@ pipeline {
         }
 
         stage('Build and Test') {
-            agent {
-                docker {
-                    image 'composer:2'
-                    args '-v /var/run/docker.sock:/var/run/docker.sock'
-                }
-            }
+            agent any
             steps {
                 withCredentials([file(credentialsId: 'laravel-env-file', variable: 'ENV_FILE')]) {
                     sh 'cp "$ENV_FILE" .env'
                 }
                 
                 sh '''
-                    # Install Node.js
-                    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-                    apt-get install -y nodejs
-                    
-                    # Install Composer dependencies
-                    composer install --no-interaction --prefer-dist
-                    
-                    # Install npm dependencies
-                    npm ci --no-audit --no-fund
-                    
-                    # Build assets
-                    npm run build
-                    
-                    # Run tests
-                    composer test
+                    # Use Docker to run build/test in container
+                    docker run --rm -v $(pwd):/app -w /app composer:2 bash -c "
+                        # Install Node.js
+                        curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+                        apt-get install -y nodejs
+                        
+                        # Install Composer dependencies
+                        composer install --no-interaction --prefer-dist
+                        
+                        # Install npm dependencies
+                        npm ci --no-audit --no-fund
+                        
+                        # Build assets
+                        npm run build
+                        
+                        # Run tests
+                        composer test
+                    "
                 '''
             }
             post {
