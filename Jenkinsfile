@@ -38,7 +38,10 @@ pipeline {
                 sh '''
                     # Use Docker to run build/test in container
                     /Applications/Docker.app/Contents/Resources/bin/docker run --rm -v $(pwd):/app -w /app composer:2 bash -c "
-                        # Install Node.js
+                        # Update package lists
+                        apt-get update
+                        
+                        # Install Node.js and npm
                         curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
                         apt-get install -y nodejs
                         
@@ -50,6 +53,9 @@ pipeline {
                         
                         # Build assets
                         npm run build
+                        
+                        # Create Unit test directory if it doesn't exist
+                        mkdir -p tests/Unit
                         
                         # Run tests
                         composer test
