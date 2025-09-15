@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    parameters {
+        string(name: 'BRANCH', defaultValue: 'main', description: 'Branch to build')
+    }
+
     environment {
         REGISTRY_URL = 'docker.io/kiiilllerbot'
         REGISTRY_CREDENTIALS = 'docker-registry-creds'
