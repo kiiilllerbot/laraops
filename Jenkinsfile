@@ -52,7 +52,7 @@ pipeline {
                         npm ci --no-audit --no-fund
                         
                         # Create build directory and manifest for tests (skip Vite build)
-                        echo 'Creating build structure for tests'
+                        printf 'Creating build structure for tests\n'
                         mkdir -p public/build/assets
                         
                         # Create manifest.json for tests
@@ -67,16 +67,16 @@ pipeline {
 EOF
                         
                         # Create a dummy app.js file
-                        echo 'console.log(\"Test app\");' > public/build/assets/app.js
-                        echo 'Created test assets'
+                        printf 'console.log("Test app");\n' > public/build/assets/app.js
+                        printf 'Created test assets\n'
                         
                         # Show final manifest content
-                        echo 'Final manifest.json content:'
+                        printf 'Final manifest.json content:\n'
                         cat public/build/manifest.json
                         
                         # Try to build assets (optional, won't fail if it doesn't work)
-                        echo 'Attempting Vite build (optional)...'
-                        npm run build || echo 'Vite build failed, using test assets'
+                        printf 'Attempting Vite build (optional)...\n'
+                        npm run build || printf 'Vite build failed, using test assets\n'
                         
                         # Create Unit test directory if it doesn't exist
                         mkdir -p tests/Unit
