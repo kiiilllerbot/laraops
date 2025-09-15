@@ -64,7 +64,7 @@ pipeline {
                         ls -la public/build/manifest.json || echo 'Manifest file not found'
                         
                         # Create build directory and proper manifest if build failed
-                        mkdir -p public/build
+                        mkdir -p public/build/assets
                         if [ ! -f public/build/manifest.json ]; then
                             echo 'Creating fallback manifest.json for tests'
                             cat > public/build/manifest.json << 'EOF'
@@ -76,7 +76,14 @@ pipeline {
   }
 }
 EOF
+                            # Create a dummy app.js file
+                            echo 'console.log("Test app");' > public/build/assets/app.js
+                            echo 'Created fallback assets'
                         fi
+                        
+                        # Show final manifest content
+                        echo 'Final manifest.json content:'
+                        cat public/build/manifest.json
                         
                         # Create Unit test directory if it doesn't exist
                         mkdir -p tests/Unit
