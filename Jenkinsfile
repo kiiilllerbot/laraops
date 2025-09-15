@@ -82,9 +82,11 @@ pipeline {
 
     post {
         always {
-            sh "docker logout ${REGISTRY_URL} || true"
-            archiveArtifacts artifacts: 'public/build/**', allowEmptyArchive: true
-            junit allowEmptyResults: true, testResults: 'storage/test-reports/**/*.xml'
+            node {
+                sh "docker logout ${REGISTRY_URL} || true"
+                archiveArtifacts artifacts: 'public/build/**', allowEmptyArchive: true
+                junit allowEmptyResults: true, testResults: 'storage/test-reports/**/*.xml'
+            }
         }
     }
 }
