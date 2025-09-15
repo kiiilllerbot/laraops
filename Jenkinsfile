@@ -104,10 +104,20 @@ EOF
             steps {
                 withCredentials([usernamePassword(credentialsId: env.REGISTRY_CREDENTIALS, usernameVariable: 'REG_USER', passwordVariable: 'REG_PASS')]) {
                     sh '''
+                        echo "Starting Docker build process..."
                         if [ -f "/Applications/Docker.app/Contents/Resources/bin/docker" ]; then
+                            echo "Docker found, proceeding with build..."
+                            
+                            echo "Logging into Docker registry..."
                             echo "$REG_PASS" | /Applications/Docker.app/Contents/Resources/bin/docker login ${REGISTRY_URL} -u $REG_USER --password-stdin
+                            
+                            echo "Building Docker image: ${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}"
                             /Applications/Docker.app/Contents/Resources/bin/docker build -t ${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG} .
+                            
+                            echo "Pushing Docker image to registry..."
                             /Applications/Docker.app/Contents/Resources/bin/docker push ${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}
+                            
+                            echo "Docker build and push completed successfully!"
                         else
                             echo "Docker not found. Skipping Docker build/push."
                             exit 1
